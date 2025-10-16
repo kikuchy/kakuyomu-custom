@@ -19,7 +19,7 @@
 
 1. このリポジトリをクローンします
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/kikuchy/kakuyomu-custom.git
    cd kakuyomu-custom
    ```
 
