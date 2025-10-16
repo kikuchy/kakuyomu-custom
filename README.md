@@ -10,7 +10,7 @@
 ## 対応ブラウザ
 
 - Chrome
-- Firefox  
+- Firefox
 - Safari
 
 ## インストール方法
@@ -18,17 +18,20 @@
 ### 開発版のインストール
 
 1. このリポジトリをクローンします
+
    ```bash
    git clone https://github.com/kikuchy/kakuyomu-custom.git
    cd kakuyomu-custom
    ```
 
 2. 依存関係をインストールします
+
    ```bash
    npm install
    ```
 
 3. 拡張機能をビルドします
+
    ```bash
    npm run build
    ```

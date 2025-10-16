@@ -7,9 +7,7 @@ browser.runtime.onInstalled.addListener(() => {
 
 browser.runtime.onMessage.addListener((message: unknown) => {
   const maybe =
-    typeof message === "object" && message !== null
-      ? (message as { type?: string })
-      : {};
+    typeof message === "object" && message !== null ? (message as { type?: string }) : {};
   if (maybe.type === "PING") {
     return Promise.resolve({ ok: true });
   }

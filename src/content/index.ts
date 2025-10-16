@@ -74,7 +74,9 @@ function insertSystemColorSchemeOption(): void {
     });
   });
 
-  const otherRadios = list.querySelectorAll<HTMLInputElement>('li input[type="radio"][name="color_theme"]');
+  const otherRadios = list.querySelectorAll<HTMLInputElement>(
+    'li input[type="radio"][name="color_theme"]',
+  );
   otherRadios.forEach((input) => {
     if (input.value === "system") return;
     input.addEventListener("change", async () => {
