@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Kakuyomu Custom",
+  "version": "0.1.0",
+  "description": "カクヨムの体験をカスタムするブラウザ拡張",
+  "action": {
+    "default_title": "Kakuyomu Custom"
+  },
+  "permissions": ["storage"],
+  "host_permissions": ["https://kakuyomu.jp/*"],
+  "background": {
+    "service_worker": "src/background/index.ts",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://kakuyomu.jp/*"],
+      "js": ["src/content/index.ts"],
+      "run_at": "document_idle"
+    }
+  ]
+}
