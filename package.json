@@ -2,8 +2,8 @@
   "name": "kakuyomu-custom",
   "version": "1.0.0",
   "description": "",
-  "license": "ISC",
-  "author": "",
+  "license": "MIT",
+  "author": "kikuchy",
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
