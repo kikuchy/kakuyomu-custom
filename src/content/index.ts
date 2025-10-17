@@ -1,10 +1,16 @@
 import browser from "webextension-polyfill";
 
+import "./style.css";
+
+const VERTICAL_WRAPPER_CLASS = "kakuyomu-extension-vertical-wrapper";
+const VERTICAL_BODY_CLASS = "kakuyomu-extension-vertical-body";
+
 function isTargetEpisodePage(): boolean {
   return /^\/works\/[^/]+\/episodes\/[^/]+/.test(location.pathname);
 }
 
 const STORAGE_KEY_BG_COLOR = "bgColorSelection";
+const STORAGE_KEY_VERTICAL_READING = "verticalReadingEnabled";
 let removeSystemListener: (() => void) | null = null;
 
 function removeExistingColorThemeClasses(target: HTMLElement): void {
@@ -87,29 +93,102 @@ function insertSystemColorSchemeOption(): void {
   });
 }
 
+function setVerticalReadingMode(enabled: boolean): void {
+  const wrapper = document.querySelector<HTMLElement>("#contentMain .widget-episode-inner");
+  if (wrapper) wrapper.classList.toggle(VERTICAL_WRAPPER_CLASS, enabled);
+
+  const body = document.querySelector<HTMLElement>(
+    "#contentMain .widget-episode-inner .widget-episodeBody",
+  );
+  if (body) body.classList.toggle(VERTICAL_BODY_CLASS, enabled);
+}
+
+function insertVerticalReadingSetting(initiallyVertical: boolean): void {
+  const displaySetting = document.querySelector("#displaySetting");
+  if (!displaySetting) return;
+
+  if (displaySetting.querySelector(".kakuyomu-extension-writing-mode")) return;
+
+  const section = document.createElement("section");
+  section.className = "kakuyomu-extension-writing-mode";
+
+  const list = document.createElement("ul");
+  const options: Array<{
+    value: "horizontal" | "vertical";
+    label: string;
+  }> = [
+    { value: "horizontal", label: "横書き" },
+    { value: "vertical", label: "縦書き" },
+  ];
+
+  options.forEach((option) => {
+    const li = document.createElement("li");
+    const input = document.createElement("input");
+
+    input.type = "radio";
+    input.name = "kakuyomu-extension-writing-mode";
+    input.value = option.value;
+
+    const isVerticalOption = option.value === "vertical";
+    const isSelected = initiallyVertical === isVerticalOption;
+    input.checked = isSelected;
+    if (isSelected) li.classList.add("isActive");
+
+    input.addEventListener("change", async () => {
+      if (!input.checked) return;
+
+      const enableVertical = option.value === "vertical";
+      setVerticalReadingMode(enableVertical);
+
+      await browser.storage.local.set({
+        [STORAGE_KEY_VERTICAL_READING]: enableVertical,
+      });
+
+      list.querySelectorAll("li").forEach((item) => item.classList.remove("isActive"));
+      li.classList.add("isActive");
+    });
+
+    li.appendChild(input);
+    li.append(document.createTextNode(option.label));
+    list.appendChild(li);
+  });
+
+  section.appendChild(list);
+  displaySetting.appendChild(section);
+}
+
 function enhanceKakuyomu(): void {
   if (!isTargetEpisodePage()) return;
   insertSystemColorSchemeOption();
 
-  browser.storage.local.get(STORAGE_KEY_BG_COLOR).then((stored) => {
-    if (stored?.[STORAGE_KEY_BG_COLOR] !== "system") return;
+  browser.storage.local
+    .get({
+      [STORAGE_KEY_BG_COLOR]: undefined,
+      [STORAGE_KEY_VERTICAL_READING]: false,
+    })
+    .then((stored) => {
+      const verticalEnabled = stored?.[STORAGE_KEY_VERTICAL_READING] === true;
+      setVerticalReadingMode(verticalEnabled);
+      insertVerticalReadingSetting(verticalEnabled);
 
-    const modalContainer = document.querySelector("#displaySetting-modalContainer");
-    const list = modalContainer?.querySelector("#displaySetting section:nth-child(2) ul");
-    const li = list?.querySelector<HTMLLIElement>("li.widget-displaySetting-bgColor-system");
-    const systemInput = li?.querySelector<HTMLInputElement>("#input-displaySetting-bgColor-system");
+      if (stored?.[STORAGE_KEY_BG_COLOR] !== "system") return;
 
-    if (systemInput && li) {
-      systemInput.checked = true;
-      li.classList.add("isActive");
-      li.parentElement?.querySelectorAll(":scope > li").forEach((sibling) => {
-        if (sibling !== li) sibling.classList.remove("isActive");
-      });
-    }
+      const modalContainer = document.querySelector("#displaySetting-modalContainer");
+      const list = modalContainer?.querySelector("#displaySetting section:nth-child(2) ul");
+      const li = list?.querySelector<HTMLLIElement>("li.widget-displaySetting-bgColor-system");
+      const systemInput = li?.querySelector<HTMLInputElement>("#input-displaySetting-bgColor-system");
 
-    applySystemTheme();
-    startSystemThemeSync();
-  });
+      if (systemInput && li) {
+        systemInput.checked = true;
+        li.classList.add("isActive");
+        li.parentElement?.querySelectorAll(":scope > li").forEach((sibling) => {
+          if (sibling !== li) sibling.classList.remove("isActive");
+        });
+      }
+
+      applySystemTheme();
+      startSystemThemeSync();
+    });
 }
 
 if (document.readyState === "loading") {
